@@ -1,0 +1,15 @@
+name: nginxdnssetup
+
+services:
+  server:
+    image: ubuntu
+    volumes:
+      - ./nginxdnssetup.sh:/home/ubuntu/tempnginxdnssetup.sh
+    ports: 
+      - 6000:80
+    command: bash -c "apt-get update;apt-get install dos2unix;dos2unix -n /home/ubuntu/tempnginxdnssetup.sh /home/ubuntu/nginxdnssetup.sh;rm /home/ubuntu/tempnginxdnssetup.sh;./home/ubuntu/nginxdnssetup.sh testdomain.com;tail -F /dev/null"
+  client:
+    image: ubuntu
+    ports:
+      - 6001:80
+    command: tail -F /dev/null

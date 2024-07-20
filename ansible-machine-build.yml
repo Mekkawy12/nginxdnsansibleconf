@@ -1,0 +1,38 @@
+---
+- name: Build server and client machines
+  hosts: localhost 
+  #become: yes
+  tasks:
+    - name: "Stop Server"
+      command: docker stop server
+      ignore_errors: yes
+
+    - name: "delete Server"
+      command: docker rm server
+      ignore_errors: yes
+
+    - name: "Stop client"
+      command: docker stop client
+      ignore_errors: yes
+
+    - name: "delete client"
+      command: docker rm client
+      ignore_errors: yes
+
+    - name: Build Server
+      docker_container:
+        name: server
+        image: ubuntu
+        state: started
+        #restart_policy: always
+        volumes:
+          - ./nginxdnssetup.sh:/home/ubuntu/tempnginxdnssetup.sh
+        command: bash -c "apt-get update;apt-get install dos2unix;dos2unix -n /home/ubuntu/tempnginxdnssetup.sh /home/ubuntu/nginxdnssetup.sh;rm /home/ubuntu/tempnginxdnssetup.sh;./home/ubuntu/nginxdnssetup.sh testdomain.com;tail -F /dev/null"
+        ports:
+          - "6002:80"
+    - name: Build client
+      docker_container:
+        name: client
+        image: ubuntu
+        state: started
+        command: tail -F /dev/null

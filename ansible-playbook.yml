@@ -1,0 +1,22 @@
+---
+- name: "NGINXDNS Setup"
+  hosts: localhost
+  tasks:
+  - name: "Stop Server"
+    command: docker stop nginxdnssetup-server-1
+    ignore_errors: yes
+
+  - name: "delete Server"
+    command: docker rm nginxdnssetup-server-1
+    ignore_errors: yes
+
+  - name: "Stop client"
+    command: docker stop nginxdnssetup-client-1
+    ignore_errors: yes
+
+  - name: "delete client"
+    command: docker rm nginxdnssetup-client-1
+    ignore_errors: yes
+
+  - name: "Build NGINXDNS Docker Compose"
+    command: docker-compose.exe up

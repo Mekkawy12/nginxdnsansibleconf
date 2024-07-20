@@ -1,0 +1,75 @@
+---
+- name: Configure Server
+  hosts: localhost
+  gather_facts: yes
+  vars:
+    domain: ""
+
+  tasks:
+
+    - name: Get current ip
+      command: hostname -I
+      register: current_ip 
+
+    - name: Update and upgrade apt packages
+      ansible.builtin.apt:
+        update_cache: yes
+
+
+    - name: Install nginx
+      apt:
+        name: "nginx"
+        state: "latest"
+
+    - name: Install bind9
+      apt:
+        name: "bind9"
+        state: "latest"
+
+    - name: Install bind9utils
+      apt:
+        name: "bind9utils"
+        state: "latest"
+
+    - name: Create a directory
+      file:
+        path: /var/www/{{ domain }}
+        state: directory
+
+    - name: Create index.html
+      template:
+        src: config/indexfile.j2
+        dest: /var/www/{{ domain }}/index.html
+
+    - name: Create domain
+      template:
+        src: config/siteconf.j2  
+        dest: /etc/nginx/sites-available/{{ domain }}
+
+    - name: Link the conf file
+      command: ln -s /etc/nginx/sites-available/{{ domain }} /etc/nginx/sites-enabled/{{ domain }}
+
+    - name: Create a directory
+      file:
+        path: /etc/bind/zones
+        state: directory
+
+    - name: Update /etc/bind/named.conf.local
+      template:
+        src: config/namedconflocal.j2
+        dest: /tmp/template.txt
+      
+      lineinfile:
+        line: "{{ lookup('file', '/tmp/template.txt') }}"
+        path: /etc/bind/named.conf.local
+        create: yes
+        insertafter: EOF
+
+    - name: Create zone file
+      template: 
+        src: config/zonetemplate.j2
+        dest: /etc/bind/zones/db.{{ domain }}
+        
+
+    - name: Reload services
+      command: bash -c "service nginx start; service named start"
